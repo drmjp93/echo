@@ -647,41 +647,46 @@ function buildGroupedDopplerTable() {
 
     let rows = [];
 
-    // Group 1: Diastolic Function (MV Inflow & Tissue Doppler)
+    // Group 1: Mitral Valve (Inflow)
     let r1 = [];
     let mve = val('mv-e'); if(mve) r1.push({ lbl: 'MV E', val: `${mve} m/s` });
     let mva = val('mv-a'); if(mva) r1.push({ lbl: 'MV A', val: `${mva} m/s` });
     let ea = val('ea');    if(ea) r1.push({ lbl: 'E/A Ratio', val: ea });
     if(r1.length) rows.push(r1);
 
+    // Group 2: Mitral Valve (Tissue Doppler & PG)
     let r1b = [];
     let ee = val('ee');    if(ee) r1b.push({ lbl: "Lat E/e'", val: ee });
     let mvm = val('mv-mpg'); if(mvm) r1b.push({ lbl: 'MV Mean PG', val: `${mvm} mmHg` });
     let mvp = val('mv-ppg'); if(mvp) r1b.push({ lbl: 'MV Peak PG', val: `${mvp} mmHg` });
     if(r1b.length) rows.push(r1b);
 
-    // Group 2: Aortic & Pulmonary Valves
+    // Group 3: Aortic Valve (AV)
     let r2 = [];
     let avv = val('av-v'); if(avv) r2.push({ lbl: 'AV Vmax', val: `${avv} m/s` });
     let avpg = val('av-pg'); if(avpg) r2.push({ lbl: 'AV Max PG', val: `${avpg} mmHg` });
-    let pvv = val('pv-v'); if(pvv) r2.push({ lbl: 'PV Vmax', val: `${pvv} m/s` });
     if(r2.length) rows.push(r2);
 
-    // Group 3: Right Heart Pressures & TR
+    // Group 4: Pulmonary Valve (PV)
     let r3 = [];
-    let trv = val('tr-v'); if(trv) r3.push({ lbl: 'TR Vmax', val: `${trv} m/s` });
-    let trpg = val('tr-pg'); if(trpg) r3.push({ lbl: 'TR Max PG', val: `${trpg} mmHg` });
-    let rvsp = val('rvsp'); if(rvsp) r3.push({ lbl: 'RVSP', val: `${rvsp} mmHg` });
+    let pvv = val('pv-v'); if(pvv) r3.push({ lbl: 'PV Vmax', val: `${pvv} m/s` });
+    let pvpg = val('pv-pg'); if(pvpg) r3.push({ lbl: 'PV Max PG', val: `${pvpg} mmHg` });
     if(r3.length) rows.push(r3);
 
-    // Group 4: Additional Right Heart (TAPSE/IVC)
+    // Group 5: Tricuspid Valve (TV/TR) & RVSP
     let r4 = [];
-    let tapse = val('tapse'); if(tapse) r4.push({ lbl: 'TAPSE', val: `${tapse} mm` });
-    let ivc = val('ivc'); if(ivc) r4.push({ lbl: 'IVC', val: `${ivc} mm` });
-    let pvpg = val('pv-pg'); if(pvpg) r4.push({ lbl: 'PV Max PG', val: `${pvpg} mmHg` }); // Placed here to fill grid nicely
+    let trv = val('tr-v'); if(trv) r4.push({ lbl: 'TR Vmax', val: `${trv} m/s` });
+    let trpg = val('tr-pg'); if(trpg) r4.push({ lbl: 'TR Max PG', val: `${trpg} mmHg` });
+    let rvsp = val('rvsp'); if(rvsp) r4.push({ lbl: 'RVSP', val: `${rvsp} mmHg` });
     if(r4.length) rows.push(r4);
 
-    // Group 5: Regurgitations
+    // Group 6: Additional Right Heart (TAPSE/IVC)
+    let r5 = [];
+    let tapse = val('tapse'); if(tapse) r5.push({ lbl: 'TAPSE', val: `${tapse} mm` });
+    let ivc = val('ivc'); if(ivc) r5.push({ lbl: 'IVC', val: `${ivc} mm` });
+    if(r5.length) rows.push(r5);
+
+    // Group 7: Regurgitations
     let rReg = [];
     let mr = val('val-mr'); if(mr) rReg.push({ lbl: 'Mitral Regurg', val: mr });
     let ar = val('val-ar'); if(ar) rReg.push({ lbl: 'Aortic Regurg', val: ar });
@@ -692,7 +697,7 @@ function buildGroupedDopplerTable() {
     let pr = val('val-pr'); if(pr) rReg2.push({ lbl: 'Pulmonary Regurg', val: pr });
     if(rReg2.length) rows.push(rReg2);
 
-    // Group 6: Custom Doppler Fields (Preserves your custom inputs)
+    // Group 8: Custom Doppler Fields
     let customFields = [];
     document.querySelectorAll('.custom-row').forEach(row => {
         let nameInput = row.querySelector('.cust-name');
@@ -717,7 +722,7 @@ function buildGroupedDopplerTable() {
         html += '<tr>';
         for(let i=0; i<3; i++) {
             if(row[i]) {
-                // Ensure we don't double up on "mmHg" if the AI engine already injected it
+                // Prevent double "mmHg mmHg" if the AI backend already calculated and appended it
                 let displayVal = row[i].val.replace('mmHg mmHg', 'mmHg');
                 html += `<td class="lbl" style="width:20%; padding-left:6px; border:1px solid #000;">${row[i].lbl}</td>
                          <td class="val" style="width:13.33%; text-align:center; border:1px solid #000;">${displayVal}</td>`;
