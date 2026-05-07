@@ -620,7 +620,7 @@ document.getElementById('pt-ref').addEventListener('change', function() {
 loadReferrers();
 
 // ══════════════════════════════════════════
-// STATS LOGGING ENGINE (Updated for KV)
+// STATS LOGGING ENGINE (Updated for KV & Fixed Triggers)
 // ══════════════════════════════════════════
 async function logEchoToServer() {
     const nameBox = document.getElementById('pt-name');
@@ -639,6 +639,7 @@ async function logEchoToServer() {
         await fetch("https://echo-stats.drmjp93.workers.dev", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            keepalive: true, // CRITICAL FIX: Prevents browser from killing request during print dialog
             body: JSON.stringify({ 
                 name: name,
                 age: age,
@@ -652,11 +653,18 @@ async function logEchoToServer() {
     }
 }
 
-// 🌟 THE MAGIC BYPASS: Intercepts the print command without touching scrambled code!
+// 🌟 MAGIC BYPASS 1: Intercepts the Print command
 const originalPrint = window.print;
 window.print = function() {
-    logEchoToServer(); // 1. Silently log the stats first
-    originalPrint();   // 2. Continue with the normal print window
+    logEchoToServer(); 
+    originalPrint.apply(this, arguments);   
+};
+
+// 🌟 MAGIC BYPASS 2: Intercepts the PDF command (Closes the loophole)
+const originalPdf = window.downloadSilentPDF;
+window.downloadSilentPDF = function() {
+    logEchoToServer();
+    originalPdf.apply(this, arguments);
 };
 
 // ══════════════════════════════════════════
