@@ -620,9 +620,9 @@ document.getElementById('pt-ref').addEventListener('change', function() {
 loadReferrers();
 
 // ══════════════════════════════════════════
-// STATS LOGGING ENGINE (Anti-Duplication Fix)
+// STATS LOGGING ENGINE (Fixed Browser Security Block)
 // ══════════════════════════════════════════
-let lastLoggedPatient = ""; // Remembers the last saved record
+let lastLoggedPatient = ""; // Memory for anti-duplication
 
 async function logEchoToServer() {
     const nameBox = document.getElementById('pt-name');
@@ -638,19 +638,15 @@ async function logEchoToServer() {
     if (!name || !age) return;
 
     // 🛑 ANTI-DUPLICATION CHECK
-    // Creates a unique stamp for this patient (e.g., "JOHN DOE_45_2026-05-08")
     const currentPatientID = name + "_" + age + "_" + echoDate;
-    
-    // If the stamp matches the last one we saved, stop the function here!
-    if (lastLoggedPatient === currentPatientID) {
-        return; 
-    }
+    if (lastLoggedPatient === currentPatientID) return; 
 
     try {
         await fetch("https://echo-stats.drmjp93.workers.dev", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            keepalive: true, // Prevents browser from killing request during print dialog
+            keepalive: true, 
+            // 🛑 CRITICAL FIX: The "Content-Type: application/json" header was removed.
+            // Browsers actively block keepalive requests if that header is present!
             body: JSON.stringify({ 
                 name: name,
                 age: age,
@@ -660,11 +656,11 @@ async function logEchoToServer() {
             })
         });
         
-        // ✅ If successfully sent, update our memory so we don't log them again
-        lastLoggedPatient = currentPatientID;
+        lastLoggedPatient = currentPatientID; // Save to memory on success
         
     } catch (e) {
-        console.log("Stats logging failed, but workflow continues.");
+        // Changed to an alert so we are no longer flying blind!
+        alert("Logging Error: " + e.message); 
     }
 }
 
@@ -675,9 +671,9 @@ window.print = function() {
     originalPrint.apply(this, arguments);   
 };
 
-// 🌟 MAGIC BYPASS 2: Intercepts the PDF command
-const originalPdf = window.downloadSilentPDF;
-window.downloadSilentPDF = function() {
+// 🌟 MAGIC BYPASS 2: Intercepts the PDF command (Direct Hook)
+const originalPdf = downloadSilentPDF;
+downloadSilentPDF = function() {
     logEchoToServer();
     originalPdf.apply(this, arguments);
 };
