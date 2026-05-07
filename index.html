@@ -620,8 +620,10 @@ document.getElementById('pt-ref').addEventListener('change', function() {
 loadReferrers();
 
 // ══════════════════════════════════════════
-// STATS LOGGING ENGINE (Updated for KV & Fixed Triggers)
+// STATS LOGGING ENGINE (Anti-Duplication Fix)
 // ══════════════════════════════════════════
+let lastLoggedPatient = ""; // Remembers the last saved record
+
 async function logEchoToServer() {
     const nameBox = document.getElementById('pt-name');
     const name = nameBox ? nameBox.value.toUpperCase().trim() : '';
@@ -635,11 +637,20 @@ async function logEchoToServer() {
 
     if (!name || !age) return;
 
+    // 🛑 ANTI-DUPLICATION CHECK
+    // Creates a unique stamp for this patient (e.g., "JOHN DOE_45_2026-05-08")
+    const currentPatientID = name + "_" + age + "_" + echoDate;
+    
+    // If the stamp matches the last one we saved, stop the function here!
+    if (lastLoggedPatient === currentPatientID) {
+        return; 
+    }
+
     try {
         await fetch("https://echo-stats.drmjp93.workers.dev", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            keepalive: true, // CRITICAL FIX: Prevents browser from killing request during print dialog
+            keepalive: true, // Prevents browser from killing request during print dialog
             body: JSON.stringify({ 
                 name: name,
                 age: age,
@@ -648,6 +659,10 @@ async function logEchoToServer() {
                 time: echoTime
             })
         });
+        
+        // ✅ If successfully sent, update our memory so we don't log them again
+        lastLoggedPatient = currentPatientID;
+        
     } catch (e) {
         console.log("Stats logging failed, but workflow continues.");
     }
@@ -660,7 +675,7 @@ window.print = function() {
     originalPrint.apply(this, arguments);   
 };
 
-// 🌟 MAGIC BYPASS 2: Intercepts the PDF command (Closes the loophole)
+// 🌟 MAGIC BYPASS 2: Intercepts the PDF command
 const originalPdf = window.downloadSilentPDF;
 window.downloadSilentPDF = function() {
     logEchoToServer();
