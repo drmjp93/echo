@@ -580,12 +580,13 @@
     return String(base + SECRET_OFFSET).padStart(4, '0');
   }
 
-  function getTodayDDMM() {
+    function getTodayDDMM() {
     const d = new Date();
-    const day   = String(d.getDate()).padStart(2, '0');
     const month = String(d.getMonth() + 1).padStart(2, '0');
-    return day + month; // format obfuscated code expects
+    const day   = String(d.getDate()).padStart(2, '0');
+    return month + day; // MMDD format = 0508 for 8 May
   }
+
 
   function simulateInput(el, val) {
     // Directly set value and fire input event
