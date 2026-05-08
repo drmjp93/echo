@@ -573,19 +573,21 @@
 (function() {
   function getDailyStaffPin() {
     const d = new Date();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
     const day   = String(d.getDate()).padStart(2, '0');
-    const base  = parseInt(month + day);
-    const SECRET_OFFSET = 1111; // ← your number
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const base  = parseInt(day + month); // DDMM = 0805
+    const SECRET_OFFSET = 1111;
     return String(base + SECRET_OFFSET).padStart(4, '0');
-  }
+}
+
 
     function getTodayDDMM() {
     const d = new Date();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
     const day   = String(d.getDate()).padStart(2, '0');
-    return month + day; // MMDD format = 0508 for 8 May
-  }
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    return day + month; // DDMM = 0805 for 8 May
+}
+
 
 
   function simulateInput(el, val) {
