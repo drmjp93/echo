@@ -698,33 +698,35 @@ document.getElementById('pt-ref').addEventListener('change', function() {
 loadReferrers();
 
 // ══════════════════════════════════════════
-// STATS LOGGING ENGINE (Fixed Browser Security Block)
+// STATS LOGGING ENGINE (Permanent Anti-Duplicate)
 // ══════════════════════════════════════════
-let lastLoggedPatient = ""; // Memory for anti-duplication
-
 async function logEchoToServer() {
     const nameBox = document.getElementById('pt-name');
     const name = nameBox ? nameBox.value.toUpperCase().trim() : '';
     const age = document.getElementById('pt-age') ? document.getElementById('pt-age').value.trim() : '';
     const sex = document.getElementById('pt-gender') ? document.getElementById('pt-gender').value.toUpperCase().trim() : '';
-    
-    // Fallback to today's date if date picker is empty
     const datePicker = document.getElementById('pt-date').value;
     const echoDate = datePicker ? datePicker : new Date().toLocaleDateString('en-CA');
     const echoTime = new Date().toLocaleTimeString('en-US', { hour12: false }); 
 
     if (!name || !age) return;
 
-    // 🛑 ANTI-DUPLICATION CHECK
+    // 🛑 PERMANENT BOUNCER
+    // Creates a unique ID for this specific report session
     const currentPatientID = name + "_" + age + "_" + echoDate;
-    if (lastLoggedPatient === currentPatientID) return; 
+    
+    // Check the browser's permanent storage
+    const lastSaved = localStorage.getItem("lastLoggedPatientID");
+    
+    if (lastSaved === currentPatientID) {
+        console.log("Duplicate prevented: Patient already logged in this session.");
+        return; 
+    }
 
     try {
         await fetch("https://echo-stats.drmjp93.workers.dev", {
             method: "POST",
             keepalive: true, 
-            // 🛑 CRITICAL FIX: The "Content-Type: application/json" header was removed.
-            // Browsers actively block keepalive requests if that header is present!
             body: JSON.stringify({ 
                 name: name,
                 age: age,
@@ -734,11 +736,11 @@ async function logEchoToServer() {
             })
         });
         
-        lastLoggedPatient = currentPatientID; // Save to memory on success
+        // ✅ Success: Lock this patient into permanent memory
+        localStorage.setItem("lastLoggedPatientID", currentPatientID);
         
     } catch (e) {
-        // Changed to an alert so we are no longer flying blind!
-        alert("Logging Error: " + e.message); 
+        console.log("Stats logging failed: " + e.message);
     }
 }
 
