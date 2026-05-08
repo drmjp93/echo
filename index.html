@@ -591,11 +591,13 @@
 
 
   function simulateInput(el, val) {
-    // Directly set value and fire input event
-    // exactly as if user typed it
-    el.value = val;
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype, 'value'
+    ).set;
+    nativeInputValueSetter.call(el, val);
     el.dispatchEvent(new Event('input', { bubbles: true }));
-  }
+}
+
 
   let staffBuffer = '';
 
