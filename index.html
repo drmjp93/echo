@@ -855,12 +855,13 @@ async function fetchEchoStats(targetMonth = null) {
   function pingStats() {
     if (localStorage.getItem(MAINT_KEY) === 'true') return;
     const today = new Date().toLocaleDateString('en-CA');
+    const subcats = getCheckedKCOs();
     fetch(PING_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date: today, source: SOURCE })
+      headers: { 'Content-Type': 'application/json', 'X-Secret-Key': 'DrMJP_Secure_2026' },
+      body: JSON.stringify({ date: today, source: SOURCE, subcats })
     }).catch(() => {});
-  }
+}
 
   // Echo already monkey-patches window.print — hook into it
   const _origPrint = window.print;
