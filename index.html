@@ -1397,6 +1397,14 @@
                     class="print-dim live-input arrow-nav-dim4" data-lbl="LPA (mm)"></div>
               </div>
             </div>
+            <div id="teichholz-bar" style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 8px 12px; border-radius: 6px; margin-top: 12px; display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: #0369a1;">
+              <div>EDV (2D Teich): <span id="calc-edv" style="color: #0ea5e9;">--</span> ml</div>
+              <div>EF: <span id="calc-ef" style="color: #0ea5e9;">--</span> %</div>
+              <div>ESV: <span id="calc-esv" style="color: #0ea5e9;">--</span> ml</div>
+              <div>FS: <span id="calc-fs" style="color: #0ea5e9;">--</span> %</div>
+              <div>IVS Thickening: <span id="calc-ivs" style="color: #0ea5e9;">--</span> %</div>
+              <div>LVPW Thickening: <span id="calc-lvpw" style="color: #0ea5e9;">--</span> %</div>
+            </div>
           </div>
 
           <div class="panel">
@@ -2011,6 +2019,60 @@ function toggleRef(){ const _0x434f35 = _0x372836; let _0x4c6b15 = document['get
           buildMaintBtn();
         }
       })();
+
+      // ══════════════════════════════════════════
+      // LIVE TEICHHOLZ CONFIRMATORY CALCULATOR
+      // ══════════════════════════════════════════
+      function calculateTeichholz() {
+        const ivsd = parseFloat(document.getElementById('ivsd').value);
+        const ivss = parseFloat(document.getElementById('ivss').value);
+        const lvdd = parseFloat(document.getElementById('lvdd').value); // stored in mm
+        const lvds = parseFloat(document.getElementById('lvds').value); // stored in mm
+        const lvpwd = parseFloat(document.getElementById('lvpwd').value);
+        const lvpws = parseFloat(document.getElementById('lvpws').value);
+
+        // Teichholz Volume formula (requires input in cm)
+        const calcVol = (d_cm) => {
+          if (!d_cm || d_cm <= 0) return 0;
+          return (7.0 / (2.4 + d_cm)) * Math.pow(d_cm, 3);
+        };
+
+        let edv = 0, esv = 0, ef = 0, fs = 0, ivsThk = 0, lvpwThk = 0;
+
+        // Calculate Volumes (Convert mm to cm by dividing by 10)
+        if (lvdd > 0) edv = calcVol(lvdd / 10);
+        if (lvds > 0) esv = calcVol(lvds / 10);
+        
+        // Calculate EF & FS
+        if (edv > 0 && esv > 0 && edv > esv) {
+          ef = ((edv - esv) / edv) * 100;
+        }
+        if (lvdd > 0 && lvds > 0 && lvdd > lvds) {
+          fs = ((lvdd - lvds) / lvdd) * 100;
+        }
+
+        // Calculate Fractional Thickening
+        if (ivsd > 0 && ivss > 0 && ivss > ivsd) {
+          ivsThk = ((ivss - ivsd) / ivsd) * 100;
+        }
+        if (lvpwd > 0 && lvpws > 0 && lvpws > lvpwd) {
+          lvpwThk = ((lvpws - lvpwd) / lvpwd) * 100;
+        }
+
+        // Update the UI
+        document.getElementById('calc-edv').innerText = edv > 0 ? edv.toFixed(1) : '--';
+        document.getElementById('calc-esv').innerText = esv > 0 ? esv.toFixed(1) : '--';
+        document.getElementById('calc-ef').innerText = ef > 0 ? ef.toFixed(1) : '--';
+        document.getElementById('calc-fs').innerText = fs > 0 ? fs.toFixed(1) : '--';
+        document.getElementById('calc-ivs').innerText = ivsThk > 0 ? Math.round(ivsThk) : '--';
+        document.getElementById('calc-lvpw').innerText = lvpwThk > 0 ? Math.round(lvpwThk) : '--';
+      }
+
+      // Attach event listeners to trigger calculation on input
+      ['ivsd', 'ivss', 'lvdd', 'lvds', 'lvpwd', 'lvpws'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', calculateTeichholz);
+      });
 
     </script>
 </body>
