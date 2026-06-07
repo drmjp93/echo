@@ -258,6 +258,106 @@
       animation: shake .35s ease;
     }
 
+
+
+     /* ── LIVE TEICH CALCULATOR ── */
+    #teich-calc-panel {
+      margin-top: 10px;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 10px 14px 12px;
+      display: none; /* shown when values present */
+    }
+
+    #teich-calc-panel .tcalc-title {
+      font-size: .72rem;
+      font-weight: 800;
+      color: #94a3b8;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #teich-calc-panel .tcalc-title span.badge {
+      background: #ea580c;
+      color: #fff;
+      font-size: .6rem;
+      padding: 1px 6px;
+      border-radius: 10px;
+      letter-spacing: .5px;
+    }
+
+    .tcalc-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    @media (max-width: 600px) {
+      .tcalc-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .tcalc-item {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 7px 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tcalc-item::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--tc-color, #ea580c);
+      border-radius: 6px 0 0 6px;
+    }
+
+    .tcalc-lbl {
+      font-size: .65rem;
+      font-weight: 700;
+      color: #64748b;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .tcalc-val {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #f8fafc;
+      letter-spacing: .5px;
+      line-height: 1.1;
+    }
+
+    .tcalc-val.good  { color: #34d399; }
+    .tcalc-val.warn  { color: #fbbf24; }
+    .tcalc-val.bad   { color: #f87171; }
+
+    .tcalc-unit {
+      font-size: .6rem;
+      font-weight: 600;
+      color: #475569;
+      margin-top: 1px;
+    }
+
+    .tcalc-formula {
+      margin-top: 7px;
+      font-size: .6rem;
+      color: #475569;
+      font-style: italic;
+      border-top: 1px solid #1e293b;
+      padding-top: 5px;
+    }
+
+
+    
     /* INACTIVITY WARNING BANNER */
     #inactivity-warning {
       display: none;
@@ -1397,14 +1497,53 @@
                     class="print-dim live-input arrow-nav-dim4" data-lbl="LPA (mm)"></div>
               </div>
             </div>
-            <div id="teichholz-bar" style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 8px 12px; border-radius: 6px; margin-top: 12px; display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: #0369a1;">
-              <div>EDV (2D Teich): <span id="calc-edv" style="color: #0ea5e9;">--</span> ml</div>
-              <div>EF: <span id="calc-ef" style="color: #0ea5e9;">--</span> %</div>
-              <div>ESV: <span id="calc-esv" style="color: #0ea5e9;">--</span> ml</div>
-              <div>FS: <span id="calc-fs" style="color: #0ea5e9;">--</span> %</div>
-              <div>IVS Thickening: <span id="calc-ivs" style="color: #0ea5e9;">--</span> %</div>
-              <div>LVPW Thickening: <span id="calc-lvpw" style="color: #0ea5e9;">--</span> %</div>
-            </div>
+
+
+             <div id="teich-calc-panel" class="panel" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%); border:1px solid #334155; padding:12px 14px 14px;">
+        <div class="tcalc-title" style="font-size:.72rem;font-weight:800;color:#94a3b8;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+          ✅ LIVE TEICHHOLZ VERIFICATION
+          <span style="background:#ea580c;color:#fff;font-size:.6rem;padding:1px 7px;border-radius:10px;letter-spacing:.5px;">MATCH CHECK</span>
+          <span style="margin-left:auto;font-size:.6rem;color:#475569;font-style:italic;font-weight:600;text-transform:none;">Compare with machine values before finalising</span>
+        </div>
+        <div class="tcalc-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;">
+          <div class="tcalc-item" style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:8px 10px;border-left:3px solid #3b82f6;">
+            <div class="tcalc-lbl" style="font-size:.63rem;font-weight:700;color:#64748b;letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px;">EDV (2D Teich)</div>
+            <div id="tc-edv" class="tcalc-val" style="font-size:1.1rem;font-weight:800;color:#93c5fd;line-height:1.1;">—</div>
+            <div class="tcalc-unit" style="font-size:.6rem;color:#475569;margin-top:1px;">mL</div>
+          </div>
+          <div class="tcalc-item" style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:8px 10px;border-left:3px solid #8b5cf6;">
+            <div class="tcalc-lbl" style="font-size:.63rem;font-weight:700;color:#64748b;letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px;">ESV (2D Teich)</div>
+            <div id="tc-esv" class="tcalc-val" style="font-size:1.1rem;font-weight:800;color:#c4b5fd;line-height:1.1;">—</div>
+            <div class="tcalc-unit" style="font-size:.6rem;color:#475569;margin-top:1px;">mL</div>
+          </div>
+          <div class="tcalc-item" style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:8px 10px;border-left:3px solid #10b981;">
+            <div class="tcalc-lbl" style="font-size:.63rem;font-weight:700;color:#64748b;letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px;">EF (Teich)</div>
+            <div id="tc-ef" class="tcalc-val" style="font-size:1.1rem;font-weight:800;color:#6ee7b7;line-height:1.1;">—</div>
+            <div class="tcalc-unit" style="font-size:.6rem;color:#475569;margin-top:1px;">%</div>
+          </div>
+          <div class="tcalc-item" style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:8px 10px;border-left:3px solid #f59e0b;">
+            <div class="tcalc-lbl" style="font-size:.63rem;font-weight:700;color:#64748b;letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px;">FS</div>
+            <div id="tc-fs" class="tcalc-val" style="font-size:1.1rem;font-weight:800;color:#fde68a;line-height:1.1;">—</div>
+            <div class="tcalc-unit" style="font-size:.6rem;color:#475569;margin-top:1px;">%</div>
+          </div>
+          <div class="tcalc-item" style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:8px 10px;border-left:3px solid #ef4444;">
+            <div class="tcalc-lbl" style="font-size:.63rem;font-weight:700;color:#64748b;letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px;">IVS %ΔT</div>
+            <div id="tc-ivs" class="tcalc-val" style="font-size:1.1rem;font-weight:800;color:#fca5a5;line-height:1.1;">—</div>
+            <div class="tcalc-unit" style="font-size:.6rem;color:#475569;margin-top:1px;">%  (norm ≥ 30%)</div>
+          </div>
+          <div class="tcalc-item" style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:8px 10px;border-left:3px solid #06b6d4;">
+            <div class="tcalc-lbl" style="font-size:.63rem;font-weight:700;color:#64748b;letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px;">LVPW %ΔT</div>
+            <div id="tc-lvpw" class="tcalc-val" style="font-size:1.1rem;font-weight:800;color:#67e8f9;line-height:1.1;">—</div>
+            <div class="tcalc-unit" style="font-size:.6rem;color:#475569;margin-top:1px;">%  (norm ≥ 40%)</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:.6rem;color:#334155;font-style:italic;border-top:1px solid #1e293b;padding-top:6px;color:#475569;">
+          Teichholz: V = [7/(2.4 + D)] × D³ &nbsp;|&nbsp; EF = (EDV−ESV)/EDV × 100 &nbsp;|&nbsp; FS = (LVDd−LVDs)/LVDd × 100 &nbsp;|&nbsp; %ΔT = (s−d)/d × 100
+        </div>
+      </div>
+
+
+            
           </div>
 
           <div class="panel">
@@ -2020,59 +2159,84 @@ function toggleRef(){ const _0x434f35 = _0x372836; let _0x4c6b15 = document['get
         }
       })();
 
-      // ══════════════════════════════════════════
-      // LIVE TEICHHOLZ CONFIRMATORY CALCULATOR
-      // ══════════════════════════════════════════
-      function calculateTeichholz() {
-        const ivsd = parseFloat(document.getElementById('ivsd').value);
-        const ivss = parseFloat(document.getElementById('ivss').value);
-        const lvdd = parseFloat(document.getElementById('lvdd').value); // stored in mm
-        const lvds = parseFloat(document.getElementById('lvds').value); // stored in mm
-        const lvpwd = parseFloat(document.getElementById('lvpwd').value);
-        const lvpws = parseFloat(document.getElementById('lvpws').value);
+      // ═══════════════════════════════════════════════════════
+  // LIVE TEICHHOLZ CONFIRMATORY CALCULATOR
+  // ═══════════════════════════════════════════════════════
+  function runTeichCalc() {
+    const ivsd  = parseFloat(document.getElementById('ivsd')?.value);
+    const ivss  = parseFloat(document.getElementById('ivss')?.value);
+    const lvdd  = parseFloat(document.getElementById('lvdd')?.value);
+    const lvds  = parseFloat(document.getElementById('lvds')?.value);
+    const lvpwd = parseFloat(document.getElementById('lvpwd')?.value);
+    const lvpws = parseFloat(document.getElementById('lvpws')?.value);
 
-        // Teichholz Volume formula (requires input in cm)
-        const calcVol = (d_cm) => {
-          if (!d_cm || d_cm <= 0) return 0;
-          return (7.0 / (2.4 + d_cm)) * Math.pow(d_cm, 3);
-        };
+    const panel = document.getElementById('teich-calc-panel');
 
-        let edv = 0, esv = 0, ef = 0, fs = 0, ivsThk = 0, lvpwThk = 0;
+    // Need at least LVDd and LVDs to show anything useful
+    const hasBase = !isNaN(lvdd) && !isNaN(lvds) && lvdd > 0 && lvds > 0;
+    if (!hasBase) {
+      panel.style.display = 'none';
+      return;
+    }
+    panel.style.display = 'block';
 
-        // Calculate Volumes (Convert mm to cm by dividing by 10)
-        if (lvdd > 0) edv = calcVol(lvdd / 10);
-        if (lvds > 0) esv = calcVol(lvds / 10);
-        
-        // Calculate EF & FS
-        if (edv > 0 && esv > 0 && edv > esv) {
-          ef = ((edv - esv) / edv) * 100;
-        }
-        if (lvdd > 0 && lvds > 0 && lvdd > lvds) {
-          fs = ((lvdd - lvds) / lvdd) * 100;
-        }
+    // Teichholz formula: V(mL) = [7 / (2.4 + D_cm)] × D_cm³
+    // Input is in mm → convert to cm
+    const Dd_cm = lvdd / 10;
+    const Ds_cm = lvds / 10;
 
-        // Calculate Fractional Thickening
-        if (ivsd > 0 && ivss > 0 && ivss > ivsd) {
-          ivsThk = ((ivss - ivsd) / ivsd) * 100;
-        }
-        if (lvpwd > 0 && lvpws > 0 && lvpws > lvpwd) {
-          lvpwThk = ((lvpws - lvpwd) / lvpwd) * 100;
-        }
+    const EDV = (7 / (2.4 + Dd_cm)) * Math.pow(Dd_cm, 3);
+    const ESV = (7 / (2.4 + Ds_cm)) * Math.pow(Ds_cm, 3);
+    const EF  = ((EDV - ESV) / EDV) * 100;
+    const FS  = ((lvdd - lvds) / lvdd) * 100;
 
-        // Update the UI
-        document.getElementById('calc-edv').innerText = edv > 0 ? edv.toFixed(1) : '--';
-        document.getElementById('calc-esv').innerText = esv > 0 ? esv.toFixed(1) : '--';
-        document.getElementById('calc-ef').innerText = ef > 0 ? ef.toFixed(1) : '--';
-        document.getElementById('calc-fs').innerText = fs > 0 ? fs.toFixed(1) : '--';
-        document.getElementById('calc-ivs').innerText = ivsThk > 0 ? Math.round(ivsThk) : '--';
-        document.getElementById('calc-lvpw').innerText = lvpwThk > 0 ? Math.round(lvpwThk) : '--';
-      }
+    function setVal(id, val, unit, colorClass) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = val;
+      el.className = 'tcalc-val ' + (colorClass || '');
+    }
 
-      // Attach event listeners to trigger calculation on input
-      ['ivsd', 'ivss', 'lvdd', 'lvds', 'lvpwd', 'lvpws'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('input', calculateTeichholz);
-      });
+    setVal('tc-edv', EDV.toFixed(1));
+    setVal('tc-esv', ESV.toFixed(1));
+
+    // EF colouring
+    let efColor = EF >= 55 ? 'good' : EF >= 40 ? 'warn' : 'bad';
+    setVal('tc-ef', EF.toFixed(1), '%', efColor);
+
+    // FS colouring (normal 25–45%)
+    let fsColor = FS >= 25 && FS <= 45 ? 'good' : FS >= 20 ? 'warn' : 'bad';
+    setVal('tc-fs', FS.toFixed(1), '%', fsColor);
+
+    // IVS %ΔT: (IVSs - IVSd) / IVSd × 100  (normal ≥ 30%)
+    if (!isNaN(ivsd) && !isNaN(ivss) && ivsd > 0) {
+      const ivsP = ((ivss - ivsd) / ivsd) * 100;
+      const ivsColor = ivsP >= 30 ? 'good' : ivsP >= 20 ? 'warn' : 'bad';
+      setVal('tc-ivs', ivsP.toFixed(1), '%', ivsColor);
+    } else {
+      document.getElementById('tc-ivs').textContent = '—';
+      document.getElementById('tc-ivs').className = 'tcalc-val';
+    }
+
+    // LVPW %ΔT: (LVPWs - LVPWd) / LVPWd × 100  (normal ≥ 40%)
+    if (!isNaN(lvpwd) && !isNaN(lvpws) && lvpwd > 0) {
+      const lvpwP = ((lvpws - lvpwd) / lvpwd) * 100;
+      const lvpwColor = lvpwP >= 40 ? 'good' : lvpwP >= 25 ? 'warn' : 'bad';
+      setVal('tc-lvpw', lvpwP.toFixed(1), '%', lvpwColor);
+    } else {
+      document.getElementById('tc-lvpw').textContent = '—';
+      document.getElementById('tc-lvpw').className = 'tcalc-val';
+    }
+  }
+
+  // Wire calculator to the 6 relevant dimension inputs
+  ['ivsd','ivss','lvdd','lvds','lvpwd','lvpws'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', runTeichCalc);
+  });
+
+  // Also run once when form state is loaded
+  document.addEventListener('echoFormLoaded', runTeichCalc);
 
     </script>
 </body>
