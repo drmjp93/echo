@@ -2092,10 +2092,37 @@ function toggleRef(){ const _0x434f35 = _0x372836; let _0x4c6b15 = document['get
         }
       }
 
+      // ══════════════════════════════════════════
+      // FULL RECORD CLOUD SAVE (overwrite same-day)
+      // ══════════════════════════════════════════
+      async function saveFullEchoToCloud() {
+        const name = document.getElementById('pt-name').value.toUpperCase().trim();
+        const age = document.getElementById('pt-age').value.trim();
+        const sex = document.getElementById('pt-gender').value.toUpperCase().trim();
+        const dateVal = document.getElementById('pt-date').value;
+        const echoDate = dateVal ? dateVal : new Date().toLocaleDateString('en-CA');
+
+        if (!name || !age) return;
+
+        const key = name + "_" + age + "_" + sex + "_" + echoDate;
+        const formState = localStorage.getItem('echoFormState');
+
+        try {
+          await fetch("https://echo.drmjp93.workers.dev/save-full", {
+            method: "POST",
+            keepalive: true,
+            body: JSON.stringify({ key: key, data: JSON.parse(formState || '{}') })
+          });
+        } catch (e) {
+          console.log("Full cloud save failed: " + e.message);
+        }
+      }
+
       // 🌟 MAGIC BYPASS 1: Intercepts the Print command
       const originalPrint = window.print;
       window.print = function () {
         logEchoToServer();
+        saveFullEchoToCloud();
         originalPrint.apply(this, arguments);
       };
 
@@ -2130,7 +2157,7 @@ function toggleRef(){ const _0x434f35 = _0x372836; let _0x4c6b15 = document['get
 
           // Create the record list
           let listHTML = data.records.map(r => `
-            <div style="padding:10px; border-bottom:1px solid #f1f5f9; font-size:13px; display:flex; justify-content:space-between; align-items:center;">
+            <div onclick="viewFullRecord('${r.name}','${r.age}','${r.gender}','${r.date}')" style="cursor:pointer; padding:10px; border-bottom:1px solid #f1f5f9; font-size:13px; display:flex; justify-content:space-between; align-items:center;">
                 <div>
                     <div style="color:#0369a1; font-weight:bold; margin-bottom:2px;">${r.name}</div>
                     <div style="color:#64748b; font-size:11px;">${r.age} yrs | ${r.gender}</div>
@@ -2168,6 +2195,20 @@ function toggleRef(){ const _0x434f35 = _0x372836; let _0x4c6b15 = document['get
           btn.innerText = "📊 VIEW STATS";
         }
       }
+
+      async function viewFullRecord(name, age, gender, date) {
+        const key = `${name}_${age}_${gender}_${date}`;
+        try {
+          const res = await fetch(`https://echo.drmjp93.workers.dev/get-full?key=${encodeURIComponent(key)}`);
+          const record = await res.json();
+          if (!record) { alert("No full record found."); return; }
+          alert(JSON.stringify(record, null, 2));
+        } catch (e) {
+          alert("Could not fetch full record.");
+        }
+      }
+
+      
       // ═══════════════════════════════════════════
       // STATS PING ENGINE  (ECHO PAGE)
       // ═══════════════════════════════════════════
