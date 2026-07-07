@@ -2105,13 +2105,14 @@ function toggleRef(){ const _0x434f35 = _0x372836; let _0x4c6b15 = document['get
         if (!name || !age) return;
 
         const key = name + "_" + age + "_" + sex + "_" + echoDate;
-        const formState = localStorage.getItem('echoFormState');
+        const formState = JSON.parse(localStorage.getItem('echoFormState') || '{}');
+        formState.conclusion = document.getElementById('conclusion').innerHTML;
 
         try {
-          await fetch("https://echo.drmjp93.workers.dev/save-full", {
+          await fetch("https://echo-stats.drmjp93.workers.dev/save-full", {
             method: "POST",
             keepalive: true,
-            body: JSON.stringify({ key: key, data: JSON.parse(formState || '{}') })
+            body: JSON.stringify({ key: key, data: formState })
           });
         } catch (e) {
           console.log("Full cloud save failed: " + e.message);
@@ -2199,15 +2200,31 @@ function toggleRef(){ const _0x434f35 = _0x372836; let _0x4c6b15 = document['get
       async function viewFullRecord(name, age, gender, date) {
         const key = `${name}_${age}_${gender}_${date}`;
         try {
-          const res = await fetch(`https://echo.drmjp93.workers.dev/get-full?key=${encodeURIComponent(key)}`);
+          const res = await fetch(`https://echo-stats.drmjp93.workers.dev/get-full?key=${encodeURIComponent(key)}`);
           const record = await res.json();
           if (!record) { alert("No full record found."); return; }
-          alert(JSON.stringify(record, null, 2));
+          loadRecordIntoForm(record);
         } catch (e) {
           alert("Could not fetch full record.");
         }
       }
 
+      function loadRecordIntoForm(record) {
+        Object.keys(record).forEach(k => {
+          if (k === 'rwma' || k === 'customFields' || k === 'conclusion') return;
+          const el = document.getElementById(k);
+          if (el) el.value = record[k];
+        });
+        if (record.conclusion) document.getElementById('conclusion').innerHTML = record.conclusion;
+        if (record.rwma) {
+          Object.keys(record.rwma).forEach(id => {
+            const path = document.getElementById(id);
+            if (path) path.setAttribute('data-val', record.rwma[id]);
+          });
+        }
+        document.getElementById('stats-modal')?.remove();
+        runLiveEngine();
+      }
       
       // ═══════════════════════════════════════════
       // STATS PING ENGINE  (ECHO PAGE)
