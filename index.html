@@ -2131,6 +2131,7 @@ function toggleRef(){ const _0x434f35 = _0x372836; let _0x4c6b15 = document['get
       const originalPdf = downloadSilentPDF;
       downloadSilentPDF = function () {
         logEchoToServer();
+        saveFullEchoToCloud();
         originalPdf.apply(this, arguments);
       };
 
