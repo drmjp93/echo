@@ -2420,6 +2420,26 @@ window['addEventListener'](_0x372836(0x1d1), secureWipe);
   document.addEventListener('echoFormLoaded', runTeichCalc);
 
     </script>
+
+  <script>
+(function () {
+  let lastDate = new Date().toLocaleDateString('en-CA');
+  setInterval(function () {
+    const nowDate = new Date().toLocaleDateString('en-CA');
+    if (nowDate !== lastDate) {
+      const dateInput = document.getElementById('pt-date');
+      if (dateInput && dateInput.value === lastDate) {
+        dateInput.value = nowDate;
+        saveFormState();
+        runLiveEngine();
+      }
+      lastDate = nowDate;
+    }
+  }, 2000);
+})();
+</script>
+
+  
 </body>
 
 </html>
