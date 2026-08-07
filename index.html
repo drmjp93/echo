@@ -2423,17 +2423,24 @@ window['addEventListener'](_0x372836(0x1d1), secureWipe);
 
 <script>
 (function () {
-  function fixStaleDate() {
-    const dateInput = document.getElementById('pt-date');
-    if (!dateInput) return;
-    const today = new Date().toLocaleDateString('en-CA');
-    if (dateInput.value && dateInput.value < today) {
-      dateInput.value = today;
-      saveFormState();
-      runLiveEngine();
+  let lastHiddenTime = null;
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) {
+      lastHiddenTime = Date.now();
+    } else if (lastHiddenTime) {
+      const awayMs = Date.now() - lastHiddenTime;
+      if (awayMs > 4 * 60 * 60 * 1000) { // away 4+ hours
+        const dateInput = document.getElementById('pt-date');
+        const today = new Date().toLocaleDateString('en-CA');
+        if (dateInput && dateInput.value && dateInput.value < today) {
+          dateInput.value = today;
+          saveFormState();
+          runLiveEngine();
+        }
+      }
+      lastHiddenTime = null;
     }
-  }
-  setInterval(fixStaleDate, 2000);
+  });
 })();
 </script>
 
