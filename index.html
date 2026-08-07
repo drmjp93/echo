@@ -2423,21 +2423,17 @@ window['addEventListener'](_0x372836(0x1d1), secureWipe);
 
 <script>
 (function () {
-  function checkDateRollover() {
-    const nowDate = new Date().toLocaleDateString('en-CA');
-    const lastDate = localStorage.getItem('echoLastSeenDate');
+  function fixStaleDate() {
     const dateInput = document.getElementById('pt-date');
-
-    if (dateInput && lastDate && lastDate !== nowDate && dateInput.value === lastDate) {
-      dateInput.value = nowDate;
+    if (!dateInput) return;
+    const today = new Date().toLocaleDateString('en-CA');
+    if (dateInput.value && dateInput.value < today) {
+      dateInput.value = today;
       saveFormState();
       runLiveEngine();
     }
-    localStorage.setItem('echoLastSeenDate', nowDate);
   }
-
-  checkDateRollover();
-  setInterval(checkDateRollover, 2000);
+  setInterval(fixStaleDate, 2000);
 })();
 </script>
 
