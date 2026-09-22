@@ -2444,6 +2444,65 @@ window['addEventListener'](_0x372836(0x1d1), secureWipe);
 })();
 </script>
 
+  <script>
+(function(){
+  var originalBuild3ColTable = build3ColTable;
+  var GROUPS = [
+  ['LA (mm)','Ao (mm)','LA/Ao'],
+  ['IVSd (mm)','IVSs (mm)'],
+  ['LVDd (mm)','LVDs (mm)'],
+  ['LVPWd (mm)','LVPWs (mm)'],
+  ['AV Vmax (m/s)','AV Max PG'],
+  ['PV Vmax (m/s)','PV Max PG'],
+  ['TR Vmax (m/s)','TR Max PG'],
+  ['MV Peak E (m/s)','MV Peak A (m/s)','E/A Ratio',"E/e' Ratio"]
+];
+
+  function reorderTableHtml(html) {
+    if (html.indexOf('<table') === -1) return html;
+    var temp = document.createElement('div');
+    temp.innerHTML = html;
+    var pairs = [];
+    temp.querySelectorAll('tr').forEach(function(row){
+      var cells = row.children;
+      for (var i = 0; i < cells.length; i += 2) {
+        var lblCell = cells[i], valCell = cells[i+1];
+        if (lblCell && lblCell.textContent.trim() !== '') {
+          pairs.push({ lbl: lblCell.textContent, val: valCell ? valCell.textContent : '' });
+        }
+      }
+    });
+
+    var used = new Set(), ordered = [];
+    GROUPS.forEach(function(g){
+      var req = g.filter(function(l){ return l !== 'LA/Ao' && l !== 'E/A Ratio' && l !== "E/e' Ratio"; });
+      var reqItems = req.map(function(l){ return pairs.find(function(p){ return p.lbl === l; }); }).filter(Boolean);
+      if (reqItems.length === req.length) {
+        g.map(function(l){ return pairs.find(function(p){ return p.lbl === l; }); })
+         .filter(Boolean)
+         .forEach(function(it){ ordered.push(it); used.add(it); });
+      }
+    });
+    pairs.forEach(function(p){ if (!used.has(p)) ordered.push(p); });
+
+    var out = '<table class="dyn-table">', cols = 4;
+    for (var i = 0; i < ordered.length; i += cols) {
+      out += '<tr>';
+      for (var j = 0; j < cols; j++) {
+        out += ordered[i+j]
+          ? '<td class="lbl">' + ordered[i+j].lbl + '</td><td class="val">' + ordered[i+j].val + '</td>'
+          : '<td class="lbl" style="border: none;"></td><td class="val" style="border: none;"></td>';
+      }
+      out += '</tr>';
+    }
+    return out + '</table>';
+  }
+
+  build3ColTable = function(selector) {
+    return reorderTableHtml(originalBuild3ColTable(selector));
+  };
+})();
+</script>
   
 </body>
 
