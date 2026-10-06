@@ -1475,7 +1475,7 @@
         <div class="form-section">
           <div class="panel flex-row">
             <div class="ig ig-wide"><label>NAME</label><input type="text" id="pt-name" class="live-input"
-                oninput="this.value = this.value.toUpperCase()"></div>
+            oninput="this.value = this.value.toUpperCase(); autoGender(this.value)"></div>
             <div class="ig"><label>AGE</label><input type="text" id="pt-age" class="live-input"></div>
             <div class="ig"><label>GENDER</label><input type="text" id="pt-gender" class="live-input"
                 oninput="this.value = this.value.toUpperCase()"></div>
@@ -2375,6 +2375,15 @@ window['addEventListener'](_0x372836(0x1d1), secureWipe);
   // Also run once when form state is loaded
   //document.addEventListener('echoFormLoaded', runTeichCalc);
 
+function autoGender(name){
+  const g = document.getElementById('pt-gender');
+  const words = name.trim().toUpperCase().split(/\s+/).filter(Boolean);
+  if(!g || !words.length) return;
+  let r = '';
+  if(words.some(w => /(BEN|BEHEN|BANU|BIBI)$/.test(w) && w.length > 3)) r = 'F';
+  else if(words.some(w => /BHAI$/.test(w) && w.length > 4)) r = 'M';
+  if(r){ g.value = r; g.dispatchEvent(new Event('input', {bubbles:true})); }
+}
     </script>
 
 <script>
