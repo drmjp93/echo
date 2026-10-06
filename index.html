@@ -2379,24 +2379,29 @@ window['addEventListener'](_0x372836(0x1d1), secureWipe);
 
 <script>
 (function () {
-  let lastHiddenTime = null;
-  document.addEventListener('visibilitychange', function () {
-    if (document.hidden) {
-      lastHiddenTime = Date.now();
-    } else if (lastHiddenTime) {
-      const awayMs = Date.now() - lastHiddenTime;
-      if (awayMs > 4 * 60 * 60 * 1000) { // away 4+ hours
-        const dateInput = document.getElementById('pt-date');
-        const today = new Date().toLocaleDateString('en-CA');
-        if (dateInput && dateInput.value && dateInput.value < today) {
-          dateInput.value = today;
-          saveFormState();
-          runLiveEngine();
-        }
-      }
-      lastHiddenTime = null;
-    }
+  let userPickedDate = false;
+  const dateInput = () => document.getElementById('pt-date');
+  const todayStr = () => new Date().toLocaleDateString('en-CA');
+
+  document.addEventListener('change', function (e) {
+    if (e.target && e.target.id === 'pt-date' && e.isTrusted) userPickedDate = true;
   });
+
+  function syncDate() {
+    const el = dateInput();
+    if (!el || userPickedDate) return;
+    if (document.getElementById('app-screen').style.display === 'none') return; // still locked
+    const today = todayStr();
+    if (el.value !== today) {
+      el.value = today;
+      saveFormState();
+      runLiveEngine();
+    }
+  }
+
+  setInterval(syncDate, 10000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) syncDate(); });
+  window.addEventListener('online', syncDate);
 })();
 </script>
 
