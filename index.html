@@ -1313,6 +1313,7 @@
       <h2>2D ECHO</h2>
       <div>
         <button class="btn-map" onclick="toggleMap()">Artery Map</button>
+                <button id="mic-btn" class="btn-map" onclick="toggleVoice()">Voice</button>
         <button class="btn-ref" onclick="toggleRef()">ASE Guidelines</button>
         <button class="btn-clear" onclick="clearForm()">Clear</button>
         <button id="pdf-dl-btn" class="btn-print" onclick="checkRVSP('pdf')" style="background: #2563eb;">📥 Download
@@ -2473,7 +2474,97 @@ function autoGender(name){
   };
 })();
 </script>
-  
+ 
+<script>
+(function(){
+const MODEL='Xenova/whisper-base.en',PAUSE=1800,TH=0.02; // PAUSE=ms silence to auto-enter, TH=mic sensitivity
+const P={ivsd:['ivsd','ivs d','ivs diastole'],ivss:['ivss','ivs s','ivs systole'],ao:['ao','aorta'],
+lvdd:['lvdd','lvidd','lvid d','lv id d','lv dd','lvd d'],lvds:['lvds','lvids','lvid s','lv id s','lv ds','lvd s'],
+la:['la','left atrium'],lvpwd:['lvpwd','lvpw d','pw d','lv pw d'],lvpws:['lvpws','lvpw s','pw s','lv pw s'],
+ef:['lvef','ef','ejection fraction'],ra:['ra','right atrium'],rv:['rv','right ventricle'],epss:['epss'],
+mpa:['mpa'],rpa:['rpa'],lpa:['lpa'],'mv-e':['mv e','mve','mitral e'],'mv-a':['mv a','mva','mitral a'],
+'av-v':['av','av v max','av vmax','av velocity'],'pv-v':['pv','pv v max','pv vmax','pv velocity'],'tr-v':['tr v max','tr vmax','tr velocity'],
+ee:['e by e prime','ee prime','lateral e'],'mv-mpg':['mv mean pg','mv mean'],'mv-ppg':['mv peak pg','mv peak'],
+rvsp:['rvsp'],tapse:['tapse','tapsi','tapsy'],ivc:['ivc'],hr:['hr','heart rate'],
+'val-ar':['ar'],'val-pr':['pr'],'val-tr':['tr'],'val-mr':['mr']};
+const R={ef:[10,85],hr:[30,200],ivsd:[3,25],ivss:[3,30],ao:[10,50],lvdd:[25,90],lvds:[15,80],la:[15,70],
+lvpwd:[3,25],lvpws:[3,30],ra:[15,70],rv:[10,60],tapse:[5,35],ivc:[5,35],rvsp:[0,150],
+'mv-e':[0.2,2.5],'mv-a':[0.1,2.5],'av-v':[0.5,6],'pv-v':[0.3,4],'tr-v':[0.5,5]};
+const map={};Object.keys(P).forEach(id=>P[id].forEach(a=>map[a]=id));
+const rx=new RegExp('\\b('+Object.keys(map).sort((a,b)=>b.length-a.length).join('|')+')\\b','g');
+const GR={none:'None',no:'None',nil:'None',trace:'Trace',trivial:'Trace',mild:'Mild',moderate:'Moderate',severe:'Severe'};
+const U={zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19};
+const T={twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+function norm(s){
+ return s.toLowerCase()
+ .replace(/\b(twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)(?:[\s-]+(one|two|three|four|five|six|seven|eight|nine))?\b/g,(m,a,b)=>T[a]+(b?U[b]:0))
+ .replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen)\b/g,m=>U[m])
+ .replace(/[,%\/\-:;]/g,' ').replace(/(?<!\d)\.|\.(?!\d)/g,' ')
+ .replace(/(\d+)\s*(?:point|dot)((?:\s*\d)+)/g,(m,a,b)=>a+'.'+b.replace(/\s/g,''))
+ .replace(/\b[a-z](?:\s+[a-z]\b)+/g,m=>m.replace(/\s+/g,''));}
+function toast(m){let t=document.getElementById('voice-toast');
+ if(!t){t=document.createElement('div');t.id='voice-toast';
+ t.style.cssText='position:fixed;bottom:40px;left:10px;max-width:90%;background:#0f172a;color:#fff;font-size:12px;padding:6px 10px;border-radius:6px;z-index:99999';document.body.appendChild(t);}
+ t.textContent=m;}
+let busyUntil=0;
+function say(m){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(m);u.rate=1.05;busyUntil=Infinity;
+ u.onend=u.onerror=()=>busyUntil=Date.now()+500;speechSynthesis.speak(u);}catch(_){}}
+function beep(f,d){try{const c=new AudioContext(),o=c.createOscillator(),g=c.createGain();o.frequency.value=f;g.gain.value=.15;
+ o.connect(g);g.connect(c.destination);o.start();setTimeout(()=>{o.stop();c.close()},d);}catch(_){}}
+function fill(id,v){const el=document.getElementById(id);if(!el)return;
+ el.value=v;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));
+ const r=R[id];const bad=r&&(v<r[0]||v>r[1]);el.style.background=bad?'#fed7aa':'#bbf7d0';el.title=bad?'Check value':'';}
+function parse(raw){
+ const t=norm(raw),m=[...t.matchAll(rx)],ok=[],miss=[];
+ m.forEach((x,i)=>{let id=map[x[1]];
+  const seg=t.slice(x.index+x[1].length,i+1<m.length?m[i+1].index:undefined);
+    if(id==='val-tr'&&/\d/.test(seg))id='tr-v';
+  if(id.startsWith('val-')){const g=seg.match(/\b(none|no|nil|trace|trivial|mild|moderate|severe)\b/);
+   if(g){fill(id,GR[g[1]]);ok.push(x[1]+'='+GR[g[1]]);}else miss.push(x[1]);}
+  else{const n=seg.match(/\d+(\.\d+)?/);if(n){fill(id,n[0]);ok.push(x[1]+'='+n[0]);}else miss.push(x[1]);}});
+ return{ok,miss,t};}
+async function handle(b){
+ try{toast('⏳ Processing…');
+  const ac=new AudioContext({sampleRate:16000});
+  const au=await ac.decodeAudioData(await b.arrayBuffer());ac.close();
+  const o=await pipe(au.getChannelData(0),{chunk_length_s:30});
+  const raw=(o.text||'').trim(),r=parse(raw);
+  toast('🎤 '+raw+(r.ok.length?'  ✔ '+r.ok.join(', '):'')+(r.miss.length?'  ⚠ no value: '+r.miss.join(', '):''));
+  if(r.ok.length&&!r.miss.length)beep(880,150);
+  else if(r.miss.length){beep(300,300);say('Missing value for '+r.miss.join(', '));}
+  else if(raw.length>8){beep(250,300);say('Not understood. Please repeat.');}
+ }catch(e){console.error(e);beep(200,400);say('Error processing audio');toast('❌ '+e.message);}}
+let pipe,stream,ctx,an,rec,chunks,hadSpeech=false,lastVoice=0,segStart=0,timer,on=false,chain=Promise.resolve();
+function newRec(){const r=new MediaRecorder(stream);rec=r;chunks=[];
+ r.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+ r.onstop=()=>{const b=new Blob(chunks,{type:r.mimeType}),keep=hadSpeech;
+  if(on)newRec();if(keep&&Date.now()>=busyUntil)chain=chain.then(()=>handle(b));};
+ hadSpeech=false;segStart=Date.now();r.start();}
+function tick(){const buf=new Float32Array(an.fftSize);an.getFloatTimeDomainData(buf);
+ let s=0;for(const v of buf)s+=v*v;const rms=Math.sqrt(s/buf.length),now=Date.now();
+ if(rms>TH&&now>=busyUntil){hadSpeech=true;lastVoice=now;}
+ if(rec.state!=='recording')return;
+ if(hadSpeech&&(now-lastVoice>PAUSE||now-segStart>25000))rec.stop();
+ else if(!hadSpeech&&now-segStart>15000)rec.stop();}
+function stop(){on=false;clearInterval(timer);if(rec&&rec.state==='recording')rec.stop();
+ stream&&stream.getTracks().forEach(t=>t.stop());ctx&&ctx.close();
+ const b=document.getElementById('mic-btn');b.textContent='🎤 Voice';b.style.background='';say('Voice off');toast('🎤 Voice off');}
+window.toggleVoice=async function(){const b=document.getElementById('mic-btn');
+ if(on){stop();return;}
+ try{
+  if(!pipe){b.textContent='⏳ Loading';say('Loading voice engine. Please wait.');
+   const T2=await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
+   T2.env.allowLocalModels=false;
+   pipe=await T2.pipeline('automatic-speech-recognition',MODEL,{progress_callback:p=>{if(p.status==='progress')toast('⏳ Downloading voice engine '+Math.round(p.progress)+'%');}});}
+  stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+  ctx=new AudioContext();an=ctx.createAnalyser();an.fftSize=2048;ctx.createMediaStreamSource(stream).connect(an);
+  on=true;newRec();timer=setInterval(tick,100);
+  b.textContent='🔴 Listening';b.style.background='#dc2626';
+  say('Voice ready. Listening.');toast('🎤 Listening… speak several parameters, then pause');
+ }catch(e){console.error(e);b.textContent='🎤 Voice';b.style.background='';say('Error. Voice engine or microphone failed.');toast('❌ '+e.message);}};
+})();
+</script>
+
 </body>
 
 </html>
